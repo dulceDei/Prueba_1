@@ -1,67 +1,102 @@
 import streamlit as st
-import random
 
-st.set_page_config(page_title="Ecuación Lineal Aleatoria", page_icon="🧮", layout="centered")
-st.title("🧮 Resuelve la ecuación lineal")
+st.set_page_config(page_title="Quiz Python - Repaso Básico", page_icon="🐍", layout="centered")
+st.title("🐍 Quiz de Repaso: Sintaxis de Python")
 
-def nueva_ecuacion():
-    x_sol = random.randint(-10, 10)
-    a = random.choice([i for i in range(-10, 11) if i not in [0, 1, -1]])
-    b = random.randint(-20, 20)
-    c = a * x_sol + b
-    st.session_state["a"] = a
-    st.session_state["b"] = b
-    st.session_state["c"] = c
-    st.session_state["x_sol"] = x_sol
-    st.session_state["respuesta"] = ""
-    st.session_state["resultado"] = ""
-    st.session_state["color"] = ""
-    st.session_state["mostrar_otro"] = False
+preguntas = [
+    {
+        "pregunta": "¿Cuál es la sintaxis correcta para definir una función en Python?",
+        "opciones": [
+            "function mi_funcion():",
+            "def mi_funcion():",
+            "define mi_funcion()",
+            "func mi_funcion():"
+        ],
+        "respuesta": 1,
+    },
+    {
+        "pregunta": "¿Cómo accedemos al tercer elemento de la lista llamada 'frutas'?",
+        "opciones": [
+            "frutas[2]",
+            "frutas(3)",
+            "frutas[3]",
+            "frutas[1]"
+        ],
+        "respuesta": 0,
+    },
+    {
+        "pregunta": "¿Qué imprime el siguiente código?\n\nfor i in range(2):\n    print(i)",
+        "opciones": [
+            "1\n2",
+            "0\n1",
+            "0\n1\n2",
+            "1\n2\n3"
+        ],
+        "respuesta": 1,
+    },
+    {
+        "pregunta": "¿Cuál es la sintaxis correcta para un condicional 'if'?",
+        "opciones": [
+            "if x == 10",
+            "if x = 10:",
+            "if x == 10:",
+            "if (x == 10)"
+        ],
+        "respuesta": 2,
+    },
+    {
+        "pregunta": "¿Qué devuelve la función len(['a','b','c'])?",
+        "opciones": [
+            "2",
+            "3",
+            "4",
+            "'abc'"
+        ],
+        "respuesta": 1,
+    },
+]
 
-# Inicializa la ecuación la primera vez
-if "a" not in st.session_state:
-    nueva_ecuacion()
-
-a = st.session_state["a"]
-b = st.session_state["b"]
-c = st.session_state["c"]
-x_sol = st.session_state["x_sol"]
-
-st.latex(f"{a}x {'+' if b >= 0 else '-'} {abs(b)} = {c}")
-
-respuesta = st.text_input(
-    "¿Cuál es el valor de $x$ que resuelve la ecuación?",
-    value=st.session_state.get("respuesta", ""),
-    key="respuesta"
-)
-
-verificar = st.button("Verificar respuesta")
-
-if verificar:
-    try:
-        respuesta_usuario = float(st.session_state["respuesta"].replace(",", "."))
-        if respuesta_usuario == x_sol:
-            st.session_state["resultado"] = f"¡Correcto! La solución es $x = {x_sol}$"
-            st.session_state["color"] = "#00FF0070"  # Verde
-        else:
-            st.session_state["resultado"] = "❌ Respuesta incorrecta."
-            st.session_state["color"] = "#FF000070"  # Rojo
-        st.session_state["mostrar_otro"] = True
-    except Exception:
-        st.session_state["resultado"] = "Por favor, ingresa un número válido."
-        st.session_state["color"] = "#FF000070"
-        st.session_state["mostrar_otro"] = True
-
-if st.session_state.get("resultado", ""):
-    color = st.session_state.get("color", "#FF000070")
-    st.markdown(
-        f'<div style="background-color: {color}; color: #222; width: 100%; padding: 0.5em; border-radius: 0.5em; margin-bottom: 1em;">{st.session_state["resultado"]}</div>',
-        unsafe_allow_html=True
+# Guardar respuestas seleccionadas en session_state
+for idx, pregunta in enumerate(preguntas):
+    st.radio(
+        f"{idx+1}. {pregunta['pregunta']}",
+        pregunta["opciones"],
+        key=f"preg_{idx}",
+        index=None
     )
 
-if st.session_state.get("mostrar_otro", False):
-    if st.button("¿Quieres otra ecuación?"):
-        nueva_ecuacion()
+if "verificado" not in st.session_state:
+    st.session_state["verificado"] = False
+
+if st.button("Verificar mis respuestas"):
+    st.session_state["verificado"] = True
+    aciertos = 0
+    for idx, pregunta in enumerate(preguntas):
+        seleccion = st.session_state.get(f"preg_{idx}")
+        correcta = pregunta["opciones"][pregunta["respuesta"]]
+        if seleccion == correcta:
+            aciertos += 1
+    st.session_state["puntaje"] = aciertos
+
+if st.session_state.get("verificado", False):
+    puntaje = st.session_state.get("puntaje", 0)
+    st.markdown(f"### Tu puntaje: **{puntaje}/5**")
+    # Mostrar el resultado de cada pregunta
+    for idx, pregunta in enumerate(preguntas):
+        seleccion = st.session_state.get(f"preg_{idx}")
+        correcta = pregunta["opciones"][pregunta["respuesta"]]
+        if seleccion == correcta:
+            st.success(f"Pregunta {idx+1}: ¡Correcto!")
+        else:
+            st.error(f"Pregunta {idx+1}: Incorrecto. Respuesta correcta: '{correcta}'")
+    # Animación de globos
+    if puntaje == 5:
+        st.balloons()
+    # Botón para volver a intentar
+    if st.button("Intentar de nuevo"):
+        for idx in range(len(preguntas)):
+            st.session_state[f"preg_{idx}"] = None
+        st.session_state["verificado"] = False
         st.experimental_rerun()
 
 
