@@ -56,7 +56,20 @@ preguntas = [
     },
 ]
 
-# Guardar respuestas seleccionadas en session_state
+# --- RESETEAR valores si corresponde ---
+if "reset_quiz" not in st.session_state:
+    st.session_state["reset_quiz"] = False
+
+if st.session_state["reset_quiz"]:
+    for idx in range(len(preguntas)):
+        if f"preg_{idx}" in st.session_state:
+            del st.session_state[f"preg_{idx}"]
+    st.session_state["verificado"] = False
+    st.session_state["puntaje"] = 0
+    st.session_state["reset_quiz"] = False
+    st.experimental_rerun()
+
+# --- PREGUNTAS (widgets radio) ---
 for idx, pregunta in enumerate(preguntas):
     st.radio(
         f"{idx+1}. {pregunta['pregunta']}",
@@ -81,7 +94,6 @@ if st.button("Verificar mis respuestas"):
 if st.session_state.get("verificado", False):
     puntaje = st.session_state.get("puntaje", 0)
     st.markdown(f"### Tu puntaje: **{puntaje}/5**")
-    # Mostrar el resultado de cada pregunta
     for idx, pregunta in enumerate(preguntas):
         seleccion = st.session_state.get(f"preg_{idx}")
         correcta = pregunta["opciones"][pregunta["respuesta"]]
@@ -89,14 +101,10 @@ if st.session_state.get("verificado", False):
             st.success(f"Pregunta {idx+1}: ¡Correcto!")
         else:
             st.error(f"Pregunta {idx+1}: Incorrecto. Respuesta correcta: '{correcta}'")
-    # Animación de globos
     if puntaje == 5:
         st.balloons()
-    # Botón para volver a intentar
     if st.button("Intentar de nuevo"):
-        for idx in range(len(preguntas)):
-            st.session_state[f"preg_{idx}"] = None
-        st.session_state["verificado"] = False
+        st.session_state["reset_quiz"] = True
         st.experimental_rerun()
 
 
