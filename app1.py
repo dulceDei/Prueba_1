@@ -15,8 +15,9 @@ def nueva_ecuacion():
     st.session_state["b"] = b
     st.session_state["c"] = c
     st.session_state["x_sol"] = x_sol
+    st.session_state["resultado"] = ""
+    st.session_state["color"] = ""
     st.session_state["respuesta"] = ""
-    st.session_state["acierto"] = False
 
 # --- Inicializa ecuación si no existe ---
 if "a" not in st.session_state:
@@ -29,38 +30,44 @@ x_sol = st.session_state["x_sol"]
 
 st.latex(f"{a}x {'+' if b >= 0 else '-'} {abs(b)} = {c}")
 
-# --- Campo de respuesta ---
 respuesta = st.text_input(
     "¿Cuál es el valor de $x$ que resuelve la ecuación?",
     value=st.session_state.get("respuesta", ""),
     key="respuesta"
 )
 
-# --- Verifica respuesta solo si no se ha acertado ---
-if not st.session_state.get("acierto", False):
-    if st.button("Verificar respuesta"):
-        try:
-            respuesta_usuario = float(respuesta.replace(",", "."))
-            if abs(respuesta_usuario - x_sol) < 1e-6:
-                st.success(f"¡Correcto! La solución es $x = {x_sol}$", icon="✅")
-                st.markdown(
-                    f'<input style="background-color: #00FF0070; color: #222; width: 100%; padding: 0.5em; border-radius: 0.5em;" value="{respuesta_usuario}" readonly>',
-                    unsafe_allow_html=True
-                )
-                st.session_state["acierto"] = True  # Marca acierto para mostrar botón
-            else:
-                st.error("❌ Respuesta incorrecta.", icon="❌")
-                st.markdown(
-                    f'<input style="background-color: #FF000070; color: #222; width: 100%; padding: 0.5em; border-radius: 0.5em;" value="{respuesta}" readonly>',
-                    unsafe_allow_html=True
-                )
-        except Exception:
-            st.error("Por favor, ingresa un número válido.", icon="⚠️")
+# Botón para verificar la respuesta
+verificar = st.button("Verificar respuesta")
 
-# --- Mostrar botón solo después de acertar ---
-if st.session_state.get("acierto", False):
+# Verificación de la respuesta
+if verificar:
+    try:
+        respuesta_usuario = float(respuesta.replace(",", "."))
+        if abs(respuesta_usuario - x_sol) < 1e-6:
+            st.session_state["resultado"] = f"¡Correcto! La solución es $x = {x_sol}$"
+            st.session_state["color"] = "#00FF0070"  # Verde
+        else:
+            st.session_state["resultado"] = "❌ Respuesta incorrecta."
+            st.session_state["color"] = "#FF000070"  # Rojo
+        st.session_state["mostrar_otro"] = True
+    except Exception:
+        st.session_state["resultado"] = "Por favor, ingresa un número válido."
+        st.session_state["color"] = "#FF000070"  # Rojo
+        st.session_state["mostrar_otro"] = True
+
+# Mostrar resultado solo si hay uno
+if st.session_state.get("resultado", ""):
+    color = st.session_state.get("color", "#FF000070")
+    st.markdown(
+        f'<div style="background-color: {color}; color: #222; width: 100%; padding: 0.5em; border-radius: 0.5em; margin-bottom: 1em;">{st.session_state["resultado"]}</div>',
+        unsafe_allow_html=True
+    )
+
+# Mostrar botón para otra ecuación si ya se verificó una vez
+if st.session_state.get("mostrar_otro", False):
     if st.button("¿Quieres otra ecuación?"):
         nueva_ecuacion()
-        st.experimental_rerun()  # Recarga la app para mostrar nueva ecuación
+        st.session_state["mostrar_otro"] = False
+        st.experimental_rerun()
 
 
