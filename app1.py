@@ -6,7 +6,7 @@ st.title("🧮 Resuelve la ecuación lineal")
 
 def nueva_ecuacion():
     x_sol = random.randint(-10, 10)
-    a = random.choice([i for i in range(-10, 11) if i not in [0, 1, -1, 0]])
+    a = random.choice([i for i in range(-10, 11) if i not in [0, 1, -1]])
     b = random.randint(-20, 20)
     c = a * x_sol + b
     st.session_state["a"] = a
@@ -38,9 +38,8 @@ respuesta = st.text_input(
 verificar = st.button("Verificar respuesta")
 
 if verificar:
-    st.session_state["respuesta"] = respuesta  # Mantener respuesta en el input
     try:
-        respuesta_usuario = float(respuesta.replace(",", "."))
+        respuesta_usuario = float(st.session_state["respuesta"].replace(",", "."))
         if respuesta_usuario == x_sol:
             st.session_state["resultado"] = f"¡Correcto! La solución es $x = {x_sol}$"
             st.session_state["color"] = "#00FF0070"  # Verde
@@ -64,4 +63,5 @@ if st.session_state.get("mostrar_otro", False):
     if st.button("¿Quieres otra ecuación?"):
         nueva_ecuacion()
         st.experimental_rerun()
+
 
